@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Animation with Popup</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Styling for Potatosei text */
+        #reveal-text {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-family: sans-serif;
+            color: black;
+            opacity: 0;
+            transition: bottom 1s ease-in-out, opacity 1s ease-in-out;
+        }
+
+        /* Styling for the question and buttons */
+        #question-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            opacity: 0; /* Initially set to 0 */
+            transition: opacity 1s ease-in-out;
+        }
+
+        .buttons {
+            margin-top: 10px;
+        }
+
+        /* Pop-up animation for canvas */
+        @keyframes pop-up {
+            0% {
+                transform: scale(0.5) translateX(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes move-back-in {
+            0% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(-50px);
+            }
+            75% {
+                transform: translateX(450px);
+            }
+            100% {
+                transform: translateX(325px);
+            }
+        }
+
+        svg {
+            display: none;
+            opacity: 0; /* Start with opacity 0 for fade-in effect */
+            transition: opacity 1s ease-in-out; /* Fade-in transition */
+        }
+
+        /* Transition for the canvas movement */
+        #canvas {
+            position: absolute; /* Make the canvas position absolute */
+            transition: transform 1s ease-in-out; /* Smooth transition for movement */
+        }
+
+        /* Heart styling to cover the entire viewport */
+        #svg-heart {
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            position: absolute; /* Position it absolutely */
+            top: 0; /* Align to the top */
+            left: 0; /* Align to the left */
+            opacity: 0; /* Start with opacity 0 */
+            z-index: -1; /* Place it behind other elements */
+            transition: opacity 0.5s ease-in-out; /* Transition for opacity change */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas for drawing the note -->
+    <canvas id="canvas" width="200" height="200"></canvas>
+
+    <!-- Potatosei text at the bottom -->
+    <div id="reveal-text">Potatosei</div>
+
+    <!-- SVG heart -->
+    <svg id="svg-heart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="red"/>
+    </svg>
+
+    <!-- SVG elements for P, +, and J -->
+    <div id="svg-container" style="display: flex; gap: 10px;">
+        <svg id="svg-P" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24">
+            <circle cx="10" cy="8" r="5" fill="black" />
+            <rect x="5" y="4" width="2" height="50" fill="black" />
+        </svg>
+        <!-- Plus Sign -->
+        <svg id="svg-plus" xmlns="http://www.w3.org/2000/svg" width="30" height="100" viewBox="0 0 24 24">
+            <rect x="10" y="0" width="4" height="24" fill="black" />
+            <rect x="0" y="10" width="24" height="4" fill="black" />
+        </svg>
+        <svg id="svg-J" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24">
+            <path d="M13 3v2h3v14c0 2.21-1.79 4-4 4s-4-1.79-4-4h2c0 1.1.9 2 2 2s2-.9 2-2v-14h-5v-2h6z" fill="black"></path>
+        </svg>
+    </div>
+
+    <!-- Question container with yes/no buttons -->
+    <div id="question-container">
+        <p>Would you like to continue?</p>
+        <div class="buttons">
+            <button>Yes</button>
+            <button>No</button>
+        </div>
+    </div>
+
+    <script>
+        // Draw the SVG path (note) onto a canvas
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Create an SVG image using an inline SVG for the music note
+        const svgNote = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24">
+            <path d="M12 4v9.38c-.73-.84-1.8-1.38-3-1.38-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V8h6V4h-7z" fill="black"></path>
+        </svg>`;
+
+        // Convert the SVG to an image
+        const img = new Image();
+        const svgBlob = new Blob([svgNote], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = function () {
+            // Draw the SVG image onto the canvas
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url); // Clean up the object URL
+
+            // Start the pop-up animation for the music note
+            canvas.style.animation = 'pop-up 0.5s ease-out forwards';
+
+            // After the pop-up, trigger the move-back-in animation
+            setTimeout(() => {
+                canvas.style.animation = 'move-back-in 1.5s ease-in-out forwards';
+
+                // After the pull-back animation, position the canvas next to the question
+                setTimeout(() => {
+                    const questionContainer = document.getElementById('question-container');
+                    const rect = questionContainer.getBoundingClientRect();
+
+                    // Set the transform to smoothly move the canvas
+                    canvas.style.transform = `translate(${rect.right + 10 - canvas.getBoundingClientRect().left}px, 0)`; // Move it to the right of the question text
+
+                    // Reveal Potatosei text at the bottom
+                    setTimeout(() => {
+                        const text = document.getElementById('reveal-text');
+                        text.style.opacity = 1;
+                        text.style.bottom = '10px'; // Move text to the bottom with ease-in-out
+
+                        // Fade in SVG P, +, and J after Potatosei moves down
+                        setTimeout(() => {
+                            const svgContainer = document.getElementById('svg-container');
+                            svgContainer.style.opacity = 1;
+                            document.getElementById('svg-P').style.display = 'inline';
+                            document.getElementById('svg-plus').style.display = 'inline'; // Show the plus sign
+                            document.getElementById('svg-J').style.display = 'inline';
+
+                            // Start fade-in for P, +, and J
+                            setTimeout(() => {
+                                document.getElementById('svg-P').style.opacity = 1;
+                                document.getElementById('svg-plus').style.opacity = 1;
+                                document.getElementById('svg-J').style.opacity = 1;
+
+                                // Show and fade in the heart
+                                const svgHeart = document.getElementById('svg-heart');
+                                svgHeart.style.display = 'block'; // Show the heart
+                                setTimeout(() => {
+                                    svgHeart.style.opacity = 0.25; // Fade in heart
+                                }, 10); // Delay slightly to trigger transition
+                            }, 750); // Delay before showing the heart
+                        }, 500); // Delay before showing SVG container
+                    }, 500); // Delay before revealing Potatosei text
+                }, 1500); // Delay for the pull-back animation
+            }, 500); // Delay before starting move-back-in animation
+        };
+
+        img.src = url; // Start loading the image
+		
+        // Show the question container after 4 seconds
+        setTimeout(() => {
+            const questionContainer = document.getElementById('question-container');
+            questionContainer.style.opacity = 1; // Fade in the question container
+        }, 5000); // Show the question after 4 seconds
+
+    </script>
+</body>
+</html>
