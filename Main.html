@@ -3,213 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Animation with Popup</title>
+    <title>Pro Tip</title>
     <style>
+        /* Default styles (Landscape) */
         body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
+            background-size: cover;
+            background-position: center;
             overflow: hidden;
             position: relative;
+            transition: background-color 0.5s; /* Smooth transition for background color */
         }
 
-        /* Styling for Potatosei text */
-        #reveal-text {
-            position: absolute;
-            bottom: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            font-family: sans-serif;
-            color: black;
+        .container {
+            text-align: center;
             opacity: 0;
-            transition: bottom 1s ease-in-out, opacity 1s ease-in-out;
+            animation: fadeInCenter 3s ease-in-out forwards;
         }
 
-        /* Styling for the question and buttons */
-        #question-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .header {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ff6347;
+            opacity: 0;
+            animation: fadeInTop 2s ease-in-out forwards;
+        }
+
+        .pro-tip {
+            font-size: 1.5em;
+            color: #ffff;
             margin-top: 20px;
-            opacity: 0; /* Initially set to 0 */
-            transition: opacity 1s ease-in-out;
         }
 
-        .buttons {
-            margin-top: 10px;
+        .footer-tip {
+            font-size: 1.2em;
+            color: #000;
+            position: absolute;
+            bottom: 20px;
+            opacity: 0;
+            animation: fadeInBottom 4s ease-in-out forwards;
         }
 
-        /* Pop-up animation for canvas */
-        @keyframes pop-up {
+        .svg-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 150px;
+            height: 150px;
+            fill: #000;
+            opacity: 0.25; /* 25% opacity */
+        }
+
+        /* Button styles */
+        .show-tip-button {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            color: white;
+            background-color: #ff6347;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .show-tip-button:hover {
+            background-color: #ff4500;
+        }
+
+        /* New text styles */
+        .new-section {
+            text-align: center;
+            position: absolute; /* Position absolutely to cover previous text */
+            opacity: 0; /* Start hidden for fade-in */
+        }
+
+        .new-header {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ff6347;
+            opacity: 0;
+            animation: fadeInTop 2s ease-in-out forwards;
+        }
+
+        .new-pro-tip {
+            font-size: 1.5em;
+            color: #ffff;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 2s ease-in-out forwards;
+        }
+
+        /* End screen styles */
+        .end-screen {
+            display: none; /* Initially hidden */
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
+            color: white;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0; /* Start hidden for fade-in */
+            animation: fadeIn 2s forwards; /* Fade in animation */
+        }
+
+        @keyframes fadeInTop {
             0% {
-                transform: scale(0.5) translateX(0);
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInCenter {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInBottom {
+            0% {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            0% {
                 opacity: 0;
             }
             100% {
-                transform: scale(1) translateX(0);
                 opacity: 1;
             }
         }
 
-        @keyframes move-back-in {
-            0% {
-                transform: translateX(0);
+        /* Media Query for Portrait mode */
+        @media screen and (orientation: portrait) {
+            body {
+                flex-direction: column; /* Stack elements vertically */
+                justify-content: center; /* Center everything vertically */
+                align-items: center; /* Center everything horizontally */
             }
-            50% {
-                transform: translateX(-50px);
-            }
-            75% {
-                transform: translateX(450px);
-            }
-            100% {
-                transform: translateX(325px);
-            }
-        }
 
-        svg {
-            display: none;
-            opacity: 0; /* Start with opacity 0 for fade-in effect */
-            transition: opacity 1s ease-in-out; /* Fade-in transition */
-        }
+            .svg-icon {
+                right: 45%;
+                top: 10%;
+                transform: translateX(50%); /* Center the icon horizontally */
+                width: 150px;
+                height: 150px;
+                opacity: 0.25;
+            }
 
-        /* Transition for the canvas movement */
-        #canvas {
-            position: absolute; /* Make the canvas position absolute */
-            transition: transform 1s ease-in-out; /* Smooth transition for movement */
-        }
-
-        /* Heart styling to cover the entire viewport */
-        #svg-heart {
-            width: 100vw; /* Full viewport width */
-            height: 100vh; /* Full viewport height */
-            position: absolute; /* Position it absolutely */
-            top: 0; /* Align to the top */
-            left: 0; /* Align to the left */
-            opacity: 0; /* Start with opacity 0 */
-            z-index: -1; /* Place it behind other elements */
-            transition: opacity 0.5s ease-in-out; /* Transition for opacity change */
+            .container {
+                margin-top: 20%; /* Move the text down to make space for the icon */
+            }
         }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get the current domain dynamically
+            var domainName = window.location.hostname;
+            // Set the background image dynamically
+            document.body.style.backgroundImage = `url('https://${domainName}/backdrop.jpg')`;
+
+            // Preload audio
+            const audio = new Audio(`https://${domainName}/AMBIENCE.mp3`);
+            audio.preload = "auto"; // Preload audio
+            audio.loop = true; // Loop the audio
+
+            // Show the button initially
+            const button = document.createElement('button');
+            button.textContent = 'SHOW TIP';
+            button.className = 'show-tip-button';
+            document.body.appendChild(button);
+
+            button.addEventListener('click', function() {
+                // Start audio playback
+                audio.play();
+                button.style.display = 'none'; // Hide the button
+
+                // Show the first tip
+                showFirstTip();
+
+                // Transition to the second tip after a delay
+                setTimeout(() => {
+                    showSecondTip();
+                }, 4000); // Time before showing the second tip
+            });
+        });
+
+        function showFirstTip() {
+            const container = document.createElement('div');
+            container.className = 'container';
+            container.innerHTML = `
+                <div class="header">DAILY PRO TIP:</div>
+                <div class="pro-tip">Nobody's perfect,</div>
+                <div class="pro-tip">the important thing is that we always stay calm about it</div>
+		<div class="pro-tip">What matters is that we accept each other</div>
+            `;
+            document.body.appendChild(container);
+
+            // Fade in the first tip
+            container.style.animation = 'fadeIn 1s forwards';
+
+            // Fade out after some time
+            setTimeout(() => {
+                container.style.animation = 'fadeOut 1s forwards';
+
+                // Show the end screen after fading out
+                setTimeout(() => {
+                    showEndScreen();
+                }, 5000); // Delay before showing the end screen
+            }, 4000); // Time before fading out
+        }
+
+        function showSecondTip() {
+            const container = document.createElement('div');
+            container.className = 'new-section';
+            container.innerHTML = `
+                <div class="new-header">Second thoughts?</div>
+                <div class="new-pro-tip">Its okay, you can chat with me and tell me about it</div>
+                <div class="new-pro-tip">even thoughi'm not always the best,</div>
+		<div class="new-pro-tip">I'll always try to mae you feel better</div>
+                <div class="new-pro-tip">💖</div>
+            `;
+            document.body.appendChild(container);
+
+            // Fade in the second tip
+            container.style.animation = 'fadeIn 1s forwards';
+        }
+
+        function showEndScreen() {
+            const endScreen = document.createElement('div');
+            endScreen.className = 'end-screen';
+            endScreen.innerHTML = `
+                <h1>Love you 💖</h1>
+            `;
+            document.body.appendChild(endScreen);
+            endScreen.style.display = 'flex'; // Show the end screen
+        }
+    </script>
 </head>
 <body>
 
-    <!-- Canvas for drawing the note -->
-    <canvas id="canvas" width="200" height="200"></canvas>
+    <!-- Audio element to play ambient music -->
+    <audio id="ambientAudio" preload="auto" loop>
+        <source src="AMBIENCE.mp3" type="audio/mpeg">
+        Your browser does not support the audio tag.
+    </audio>
 
-    <!-- Potatosei text at the bottom -->
-    <div id="reveal-text">Potatosei</div>
-
-    <!-- SVG heart -->
-    <svg id="svg-heart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="red"/>
-    </svg>
-
-    <!-- SVG elements for P, +, and J -->
-    <div id="svg-container" style="display: flex; gap: 10px;">
-        <svg id="svg-P" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24">
-            <circle cx="10" cy="8" r="5" fill="black" />
-            <rect x="5" y="4" width="2" height="50" fill="black" />
-        </svg>
-        <!-- Plus Sign -->
-        <svg id="svg-plus" xmlns="http://www.w3.org/2000/svg" width="30" height="100" viewBox="0 0 24 24">
-            <rect x="10" y="0" width="4" height="24" fill="black" />
-            <rect x="0" y="10" width="24" height="4" fill="black" />
-        </svg>
-        <svg id="svg-J" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24">
-            <path d="M13 3v2h3v14c0 2.21-1.79 4-4 4s-4-1.79-4-4h2c0 1.1.9 2 2 2s2-.9 2-2v-14h-5v-2h6z" fill="black"></path>
-        </svg>
-    </div>
-
-    <!-- Question container with yes/no buttons -->
-    <div id="question-container">
-        <p>Would you like to continue?</p>
-        <div class="buttons">
-            <button>Yes</button>
-            <button>No</button>
-        </div>
-    </div>
-
-    <script>
-        // Draw the SVG path (note) onto a canvas
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Create an SVG image using an inline SVG for the music note
-        const svgNote = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24">
-            <path d="M12 4v9.38c-.73-.84-1.8-1.38-3-1.38-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V8h6V4h-7z" fill="black"></path>
-        </svg>`;
-
-        // Convert the SVG to an image
-        const img = new Image();
-        const svgBlob = new Blob([svgNote], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(svgBlob);
-
-        img.onload = function () {
-            // Draw the SVG image onto the canvas
-            ctx.drawImage(img, 0, 0);
-            URL.revokeObjectURL(url); // Clean up the object URL
-
-            // Start the pop-up animation for the music note
-            canvas.style.animation = 'pop-up 0.5s ease-out forwards';
-
-            // After the pop-up, trigger the move-back-in animation
-            setTimeout(() => {
-                canvas.style.animation = 'move-back-in 1.5s ease-in-out forwards';
-
-                // After the pull-back animation, position the canvas next to the question
-                setTimeout(() => {
-                    const questionContainer = document.getElementById('question-container');
-                    const rect = questionContainer.getBoundingClientRect();
-
-                    // Set the transform to smoothly move the canvas
-                    canvas.style.transform = `translate(${rect.right + 10 - canvas.getBoundingClientRect().left}px, 0)`; // Move it to the right of the question text
-
-                    // Reveal Potatosei text at the bottom
-                    setTimeout(() => {
-                        const text = document.getElementById('reveal-text');
-                        text.style.opacity = 1;
-                        text.style.bottom = '10px'; // Move text to the bottom with ease-in-out
-
-                        // Fade in SVG P, +, and J after Potatosei moves down
-                        setTimeout(() => {
-                            const svgContainer = document.getElementById('svg-container');
-                            svgContainer.style.opacity = 1;
-                            document.getElementById('svg-P').style.display = 'inline';
-                            document.getElementById('svg-plus').style.display = 'inline'; // Show the plus sign
-                            document.getElementById('svg-J').style.display = 'inline';
-
-                            // Start fade-in for P, +, and J
-                            setTimeout(() => {
-                                document.getElementById('svg-P').style.opacity = 1;
-                                document.getElementById('svg-plus').style.opacity = 1;
-                                document.getElementById('svg-J').style.opacity = 1;
-
-                                // Show and fade in the heart
-                                const svgHeart = document.getElementById('svg-heart');
-                                svgHeart.style.display = 'block'; // Show the heart
-                                setTimeout(() => {
-                                    svgHeart.style.opacity = 0.25; // Fade in heart
-                                }, 10); // Delay slightly to trigger transition
-                            }, 750); // Delay before showing the heart
-                        }, 500); // Delay before showing SVG container
-                    }, 500); // Delay before revealing Potatosei text
-                }, 1500); // Delay for the pull-back animation
-            }, 500); // Delay before starting move-back-in animation
-        };
-
-        img.src = url; // Start loading the image
-		
-        // Show the question container after 4 seconds
-        setTimeout(() => {
-            const questionContainer = document.getElementById('question-container');
-            questionContainer.style.opacity = 1; // Fade in the question container
-        }, 5000); // Show the question after 4 seconds
-
-    </script>
 </body>
 </html>
